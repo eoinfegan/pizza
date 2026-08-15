@@ -1,4 +1,4 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -283,8 +283,7 @@
     </div>
 
     <script>
-        // --- SINGLE GOOGLE SHEET INTEGRATION ---
-        const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
+        const MASTER_CSV_URL = "YOUR_SINGLE_CSV_URL_HERE";
 
         async function loadMasterSheet() {
             if (MASTER_CSV_URL.includes("YOUR_")) return; 
@@ -304,11 +303,11 @@
                     const cols = rows[i];
                     if (!cols || cols.length === 0) continue;
 
-                    // Updated Column Layout mapping:
-                    // 0: Name, 1: Attending? (yes/no)
-                    // 2: Specialty, 3: Available? (yes/no), 4: Ingredients
-                    // 5: Topping, 6: Available? (yes/no)
-                    // 7: Drink, 8: Available? (yes/no)
+                    // Exact Column Index Mapping:
+                    // Col A (0): Name, Col B (1): Attending?
+                    // Col C (2): Specialty, Col D (3): Available?, Col E (4): Ingredients
+                    // Col F (5): Topping, Col G (6): Available?
+                    // Col H (7): Drink, Col I (8): Available?
 
                     const name = cols[0];
                     const nameActive = cols[1] ? cols[1].toLowerCase() === 'yes' : false;
@@ -323,14 +322,14 @@
                     const drink = cols[7];
                     const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
 
-                    // 1. Populate Names (Only if attending = yes)
+                    // 1. Populate Names
                     if (name && nameActive) {
                         const opt = document.createElement('option');
                         opt.value = name;
                         datalist.appendChild(opt);
                     }
 
-                    // 2. Populate Specialties & Ingredients (Only if available = yes)
+                    // 2. Populate Specialties
                     if (specialty && specialtyActive) {
                         const label = document.createElement('label');
                         const desc = specialtyIngredients ? `<span class="specialty-desc">${specialtyIngredients}</span>` : '';
@@ -338,14 +337,14 @@
                         specialtiesContainer.appendChild(label);
                     }
 
-                    // 3. Populate Toppings (Only if available = yes)
+                    // 3. Populate Toppings (Strictly from column 5 & 6)
                     if (topping && toppingActive) {
                         const label = document.createElement('label');
                         label.innerHTML = `<input type="checkbox" name="topping" value="${topping}"> ${topping}`;
                         toppingsContainer.appendChild(label);
                     }
 
-                    // 4. Populate Drinks (Only if available = yes)
+                    // 4. Populate Drinks (Strictly from column 7 & 8)
                     if (drink && drinkActive) {
                         const label = document.createElement('label');
                         label.innerHTML = `<input type="radio" name="drink" value="${drink}"> ${drink}`;
@@ -359,8 +358,6 @@
 
         window.addEventListener('DOMContentLoaded', loadMasterSheet);
 
-
-        // --- ORDER FORM LOGIC ---
         const orders = [];
         const orderListEl = document.getElementById('orderList');
         const orderCountEl = document.getElementById('orderCount');
