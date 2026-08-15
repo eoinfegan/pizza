@@ -285,37 +285,13 @@
     <script>
         const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
 
-        function parseCSV(text) {
-            let lines = text.split("\n");
-            let result = [];
-            for (let i = 0; i < lines.length; i++) {
-                let row = [];
-                let inQuotes = false;
-                let entry = "";
-                let line = lines[i];
-                for (let j = 0; j < line.length; j++) {
-                    let char = line[j];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        row.push(entry.trim().replace(/^["']|["']$/g, ''));
-                        entry = "";
-                    } else {
-                        entry += char;
-                    }
-                }
-                row.push(entry.trim().replace(/^["']|["']$/g, ''));
-                result.push(row);
-            }
-            return result;
-        }
-
         async function loadMasterSheet() {
             try {
                 const response = await fetch(MASTER_CSV_URL);
                 const csvText = await response.text();
                 
-                const rows = parseCSV(csvText);
+                // Standard CSV line splitter
+                const rows = csvText.split("\n").map(row => row.split(",").map(val => val.trim().replace(/^["']|["']$/g, '')));
                 
                 const datalist = document.getElementById('presetNames');
                 const specialtiesContainer = document.getElementById('specialtiesContainer');
@@ -341,8 +317,10 @@
                         const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
                         if (specialtyActive) {
                             const specialty = cols[2];
-                            // Clean up any remaining leading/trailing quotes from the ingredients cell text
-                            const ingredients = cols[4] ? cols[4].replace(/^["']|["']$/g, '').trim() : "";
+                            // Cleanly strip any lingering quote marks from ingredients
+                            let ingredients = cols[4] || "";
+                            ingredients = ingredients.replace(/^["']+|["']+$|["']/g, "").trim();
+                            
                             const label = document.createElement('label');
                             const desc = ingredients ? `<span class="specialty-desc">${ingredients}</span>` : '';
                             label.innerHTML = `<input type="radio" name="specialty" value="${specialty}"> <span>${specialty}${desc}</span>`;
@@ -354,7 +332,7 @@
                     if (cols[5] && cols[5] !== "") {
                         const toppingActive = cols[6] ? cols[6].toLowerCase() === 'yes' : false;
                         if (toppingActive) {
-                            const topping = cols[5];
+                            const topping = cols[5].replace(/^["']+|["']+$|["']/g, "").trim();
                             const label = document.createElement('label');
                             label.innerHTML = `<input type="checkbox" name="topping" value="${topping}"> ${topping}`;
                             toppingsContainer.appendChild(label);
@@ -365,7 +343,7 @@
                     if (cols[7] && cols[7] !== "") {
                         const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
                         if (drinkActive) {
-                            const drink = cols[7];
+                            const drink = cols[7].replace(/^["']+|["']+$|["']/g, "").trim();
                             const label = document.createElement('label');
                             label.innerHTML = `<input type="radio" name="drink" value="${drink}"> ${drink}`;
                             drinksContainer.appendChild(label);
