@@ -285,14 +285,38 @@
     <script>
         const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
 
+        // Advanced CSV parser that handles commas inside quoted text correctly
+        function parseCSV(text) {
+            let lines = text.split("\n");
+            let result = [];
+            for (let i = 0; i < lines.length; i++) {
+                let row = [];
+                let inQuotes = false;
+                let entry = "";
+                let line = lines[i];
+                for (let j = 0; j < line.length; j++) {
+                    let char = line[j];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        row.push(entry.trim().replace(/^"|"$/g, ''));
+                        entry = "";
+                    } else {
+                        entry += char;
+                    }
+                }
+                row.push(entry.trim().replace(/^"|"$/g, ''));
+                result.push(row);
+            }
+            return result;
+        }
+
         async function loadMasterSheet() {
-            if (MASTER_CSV_URL.includes("YOUR_")) return; 
-            
             try {
                 const response = await fetch(MASTER_CSV_URL);
                 const csvText = await response.text();
                 
-                const rows = csvText.split("\n").map(row => row.split(",").map(val => val.trim().replace(/^"|"$/g, '')));
+                const rows = parseCSV(csvText);
                 
                 const datalist = document.getElementById('presetNames');
                 const specialtiesContainer = document.getElementById('specialtiesContainer');
@@ -303,52 +327,49 @@
                     const cols = rows[i];
                     if (!cols || cols.length === 0) continue;
 
-                    // Exact Column Index Mapping:
-                    // Col A (0): Name, Col B (1): Attending?
-                    // Col C (2): Specialty, Col D (3): Available?, Col E (4): Ingredients
-                    // Col F (5): Topping, Col G (6): Available?
-                    // Col H (7): Drink, Col I (8): Available?
-
-                    const name = cols[0];
-                    const nameActive = cols[1] ? cols[1].toLowerCase() === 'yes' : false;
-
-                    const specialty = cols[2];
-                    const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
-                    const specialtyIngredients = cols[4] || "";
-
-                    const topping = cols[5];
-                    const toppingActive = cols[6] ? cols[6].toLowerCase() === 'yes' : false;
-
-                    const drink = cols[7];
-                    const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
-
-                    // 1. Populate Names
-                    if (name && nameActive) {
-                        const opt = document.createElement('option');
-                        opt.value = name;
-                        datalist.appendChild(opt);
+                    // 1. Process Names (Cols 0 & 1)
+                    if (cols[0] && cols[0] !== "") {
+                        const nameActive = cols[1] ? cols[1].toLowerCase() === 'yes' : false;
+                        if (nameActive) {
+                            const opt = document.createElement('option');
+                            opt.value = cols[0];
+                            datalist.appendChild(opt);
+                        }
                     }
 
-                    // 2. Populate Specialties
-                    if (specialty && specialtyActive) {
-                        const label = document.createElement('label');
-                        const desc = specialtyIngredients ? `<span class="specialty-desc">${specialtyIngredients}</span>` : '';
-                        label.innerHTML = `<input type="radio" name="specialty" value="${specialty}"> <span>${specialty}${desc}</span>`;
-                        specialtiesContainer.appendChild(label);
+                    // 2. Process Specialties, Availability & Ingredients (Cols 2, 3, 4)
+                    if (cols[2] && cols[2] !== "") {
+                        const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
+                        if (specialtyActive) {
+                            const specialty = cols[2];
+                            const ingredients = cols[4] || "";
+                            const label = document.createElement('label');
+                            const desc = ingredients ? `<span class="specialty-desc">${ingredients}</span>` : '';
+                            label.innerHTML = `<input type="radio" name="specialty" value="${specialty}"> <span>${specialty}${desc}</span>`;
+                            specialtiesContainer.appendChild(label);
+                        }
                     }
 
-                    // 3. Populate Toppings (Strictly from column 5 & 6)
-                    if (topping && toppingActive) {
-                        const label = document.createElement('label');
-                        label.innerHTML = `<input type="checkbox" name="topping" value="${topping}"> ${topping}`;
-                        toppingsContainer.appendChild(label);
+                    // 3. Process Toppings & Availability (Cols 5 & 6)
+                    if (cols[5] && cols[5] !== "") {
+                        const toppingActive = cols[6] ? cols[6].toLowerCase() === 'yes' : false;
+                        if (toppingActive) {
+                            const topping = cols[5];
+                            const label = document.createElement('label');
+                            label.innerHTML = `<input type="checkbox" name="topping" value="${topping}"> ${topping}`;
+                            toppingsContainer.appendChild(label);
+                        }
                     }
 
-                    // 4. Populate Drinks (Strictly from column 7 & 8)
-                    if (drink && drinkActive) {
-                        const label = document.createElement('label');
-                        label.innerHTML = `<input type="radio" name="drink" value="${drink}"> ${drink}`;
-                        drinksContainer.appendChild(label);
+                    // 4. Process Drinks & Availability (Cols 7 & 8)
+                    if (cols[7] && cols[7] !== "") {
+                        const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
+                        if (drinkActive) {
+                            const drink = cols[7];
+                            const label = document.createElement('label');
+                            label.innerHTML = `<input type="radio" name="drink" value="${drink}"> ${drink}`;
+                            drinksContainer.appendChild(label);
+                        }
                     }
                 }
             } catch (e) {
