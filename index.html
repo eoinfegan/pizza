@@ -285,7 +285,6 @@
     <script>
         const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
 
-        // Advanced CSV parser that handles commas inside quoted text correctly
         function parseCSV(text) {
             let lines = text.split("\n");
             let result = [];
@@ -299,13 +298,13 @@
                     if (char === '"') {
                         inQuotes = !inQuotes;
                     } else if (char === ',' && !inQuotes) {
-                        row.push(entry.trim().replace(/^"|"$/g, ''));
+                        row.push(entry.trim().replace(/^["']|["']$/g, ''));
                         entry = "";
                     } else {
                         entry += char;
                     }
                 }
-                row.push(entry.trim().replace(/^"|"$/g, ''));
+                row.push(entry.trim().replace(/^["']|["']$/g, ''));
                 result.push(row);
             }
             return result;
@@ -342,7 +341,8 @@
                         const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
                         if (specialtyActive) {
                             const specialty = cols[2];
-                            const ingredients = cols[4] || "";
+                            // Clean up any remaining leading/trailing quotes from the ingredients cell text
+                            const ingredients = cols[4] ? cols[4].replace(/^["']|["']$/g, '').trim() : "";
                             const label = document.createElement('label');
                             const desc = ingredients ? `<span class="specialty-desc">${ingredients}</span>` : '';
                             label.innerHTML = `<input type="radio" name="specialty" value="${specialty}"> <span>${specialty}${desc}</span>`;
