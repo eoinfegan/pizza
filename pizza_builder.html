@@ -1,0 +1,425 @@
+	<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Pizza Order</title>
+    <style>
+        :root {
+            --primary-color: #27ae60;
+            --secondary-color: #2980b9;
+            --background-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .menu-section {
+            flex: 2;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .summary-section {
+            flex: 1;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-list-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            margin-bottom: 20px;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .section-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .category {
+            margin-bottom: 25px;
+        }
+
+        .category h3 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+            color: #555;
+            font-size: 1.1em;
+            margin-top: 0;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        .option-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .specialty-group {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .specialty-group label {
+            align-items: flex-start;
+        }
+
+        .specialty-group input[type="radio"] {
+            margin-top: 4px;
+        }
+
+        .specialty-desc {
+            display: block;
+            font-size: 0.85em;
+            color: #777;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        label:hover {
+            background: #f0f0f0;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: var(--primary-color);
+        }
+
+        .skip-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #eee;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .skip-btn:hover {
+            background-color: #ddd;
+        }
+
+        .order-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        .order-btn:hover {
+            background-color: #219653;
+        }
+
+        .email-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .email-btn:hover {
+            background-color: #1f6391;
+        }
+
+        .order-card {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .order-card strong {
+            font-size: 1.1em;
+            color: var(--primary-color);
+        }
+        
+        .specialty-badge {
+            display: inline-block;
+            background-color: #f39c12;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .specialty-group { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="menu-section">
+            <h1>🍕 Group Pizza Builder</h1>
+            <p>Build a custom pizza and add it to the group list!</p>
+
+            <form id="pizzaForm">
+                <div class="category">
+                    <h3>Who is this pizza for?</h3>
+                    <input type="text" id="userName" class="name-input" list="presetNames" placeholder="Select or type a name...">
+                    <datalist id="presetNames"></datalist>
+                </div>
+
+                <div class="category">
+                    <h3>House Specialties</h3>
+                    <div class="option-group specialty-group" id="specialtiesContainer">
+                        <label><input type="radio" name="specialty" value="None" checked> <span>None (Build Custom)</span></label>
+                    </div>
+                    <a href="#drinksSection" class="skip-btn">Skip to Drinks</a>
+                </div>
+
+                <h2 class="section-title">Build Your Own</h2>
+                <div class="category">
+                    <h3>Choose Sauce</h3>
+                    <div class="option-group">
+                        <label><input type="radio" name="sauce" value="Tomato" checked> Tomato</label>
+                        <label><input type="radio" name="sauce" value="No Sauce"> No Sauce</label>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <h3>Choose Extra Toppings</h3>
+                    <div class="option-group" id="toppingsContainer"></div>
+                </div>
+
+                <h2 class="section-title" id="drinksSection">Drinks</h2>
+                <div class="category">
+                    <h3>Choose a Drink</h3>
+                    <div class="option-group" id="drinksContainer">
+                        <label><input type="radio" name="drink" value="No Drink" checked> No Drink</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="order-btn">Add to Group Order</button>
+            </form>
+        </div>
+
+        <div class="summary-section">
+            <h2>Order Summary (<span id="orderCount">0</span>)</h2>
+            <div class="order-list-container" id="orderList">
+                <p style="color: #777; font-style: italic;">No pizzas submitted yet. Be the first!</p>
+            </div>
+            <button class="email-btn" onclick="sendEmail()">Send Email</button>
+        </div>
+    </div>
+
+    <script>
+        // --- SINGLE GOOGLE SHEET INTEGRATION ---
+        const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
+
+        async function loadMasterSheet() {
+            if (MASTER_CSV_URL.includes("YOUR_")) return; 
+            
+            try {
+                const response = await fetch(MASTER_CSV_URL);
+                const csvText = await response.text();
+                
+                const rows = csvText.split("\n").map(row => row.split(",").map(val => val.trim().replace(/^"|"$/g, '')));
+                
+                const datalist = document.getElementById('presetNames');
+                const specialtiesContainer = document.getElementById('specialtiesContainer');
+                const toppingsContainer = document.getElementById('toppingsContainer');
+                const drinksContainer = document.getElementById('drinksContainer');
+
+                for (let i = 1; i < rows.length; i++) {
+                    const cols = rows[i];
+                    if (!cols || cols.length === 0) continue;
+
+                    // Updated Column Layout mapping:
+                    // 0: Name, 1: Attending? (yes/no)
+                    // 2: Specialty, 3: Available? (yes/no), 4: Ingredients
+                    // 5: Topping, 6: Available? (yes/no)
+                    // 7: Drink, 8: Available? (yes/no)
+
+                    const name = cols[0];
+                    const nameActive = cols[1] ? cols[1].toLowerCase() === 'yes' : false;
+
+                    const specialty = cols[2];
+                    const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
+                    const specialtyIngredients = cols[4] || "";
+
+                    const topping = cols[5];
+                    const toppingActive = cols[6] ? cols[6].toLowerCase() === 'yes' : false;
+
+                    const drink = cols[7];
+                    const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
+
+                    // 1. Populate Names (Only if attending = yes)
+                    if (name && nameActive) {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        datalist.appendChild(opt);
+                    }
+
+                    // 2. Populate Specialties & Ingredients (Only if available = yes)
+                    if (specialty && specialtyActive) {
+                        const label = document.createElement('label');
+                        const desc = specialtyIngredients ? `<span class="specialty-desc">${specialtyIngredients}</span>` : '';
+                        label.innerHTML = `<input type="radio" name="specialty" value="${specialty}"> <span>${specialty}${desc}</span>`;
+                        specialtiesContainer.appendChild(label);
+                    }
+
+                    // 3. Populate Toppings (Only if available = yes)
+                    if (topping && toppingActive) {
+                        const label = document.createElement('label');
+                        label.innerHTML = `<input type="checkbox" name="topping" value="${topping}"> ${topping}`;
+                        toppingsContainer.appendChild(label);
+                    }
+
+                    // 4. Populate Drinks (Only if available = yes)
+                    if (drink && drinkActive) {
+                        const label = document.createElement('label');
+                        label.innerHTML = `<input type="radio" name="drink" value="${drink}"> ${drink}`;
+                        drinksContainer.appendChild(label);
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading master sheet:", e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadMasterSheet);
+
+
+        // --- ORDER FORM LOGIC ---
+        const orders = [];
+        const orderListEl = document.getElementById('orderList');
+        const orderCountEl = document.getElementById('orderCount');
+        const pizzaForm = document.getElementById('pizzaForm');
+
+        pizzaForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('userName');
+            const name = nameInput.value.trim();
+            if (!name) { alert("⚠️ Please select or enter a name!"); nameInput.focus(); return; }
+
+            const specialty = document.querySelector('input[name="specialty"]:checked')?.value || "None";
+            const sauce = document.querySelector('input[name="sauce"]:checked')?.value || "Tomato";
+            const drink = document.querySelector('input[name="drink"]:checked')?.value || "No Drink";
+            const toppingElements = document.querySelectorAll('input[name="topping"]:checked');
+            const toppings = Array.from(toppingElements).map(el => el.value);
+            const toppingsText = toppings.length > 0 ? toppings.join(', ') : 'None';
+
+            orders.push({ name, specialty, sauce, toppings: toppingsText, drink });
+            renderOrders();
+            resetForm(nameInput, toppingElements);
+        });
+
+        function renderOrders() {
+            orderListEl.innerHTML = ''; 
+            orderCountEl.textContent = orders.length;
+            orders.forEach((order) => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'order-card';
+                let specialtyHtml = order.specialty !== "None" ? `<div class="specialty-badge">★ ${order.specialty}</div><br>` : '';
+                const detailsStyle = `style="font-size: 0.85em; color: #555;"`;
+                let drinkHtml = order.drink !== "No Drink" ? `<br><small><em>Drink:</em> <strong>${order.drink}</strong></small>` : '';
+                orderCard.innerHTML = `<strong>${order.name}'s Order</strong><br>${specialtyHtml}<span ${detailsStyle}>Sauce: ${order.sauce}<br>Extra/Custom Toppings: ${order.toppings}</span>${drinkHtml}`;
+                orderListEl.appendChild(orderCard);
+            });
+        }
+
+        function resetForm(nameInput, toppingElements) {
+            nameInput.value = '';
+            toppingElements.forEach(el => el.checked = false);
+            document.querySelector('input[name="specialty"][value="None"]').checked = true;
+            document.querySelector('input[name="sauce"][value="Tomato"]').checked = true;
+            const defaultDrink = document.querySelector('input[name="drink"][value="No Drink"]');
+            if(defaultDrink) defaultDrink.checked = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function sendEmail() {
+            if (orders.length === 0) { alert("There are no orders to send yet!"); return; }
+            let emailBody = "Here is the group pizza order:\n\n";
+            orders.forEach((o, i) => {
+                emailBody += `${i + 1}. ${o.name}'s Order\n`;
+                if (o.specialty !== "None") emailBody += `   Specialty: ${o.specialty}\n`;
+                emailBody += `   Sauce: ${o.sauce}\n   Toppings: ${o.toppings}\n`;
+                if (o.drink !== "No Drink") emailBody += `   Drink: ${o.drink}\n`;
+                emailBody += `\n`;
+            });
+            window.location.href = `mailto:eoinfegan@gmail.com?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
+        }
+    </script>
+</body>
+</html>
