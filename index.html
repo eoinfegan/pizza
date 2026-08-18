@@ -285,18 +285,22 @@
     <script>
         const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
 
+        // Global array to store recipient emails collected from the sheet
+        let recipientEmails = [];
+
         async function loadMasterSheet() {
             try {
                 const response = await fetch(MASTER_CSV_URL);
                 const csvText = await response.text();
                 
-                // Standard CSV line splitter
                 const rows = csvText.split("\n").map(row => row.split(",").map(val => val.trim().replace(/^["']|["']$/g, '')));
                 
                 const datalist = document.getElementById('presetNames');
                 const specialtiesContainer = document.getElementById('specialtiesContainer');
                 const toppingsContainer = document.getElementById('toppingsContainer');
                 const drinksContainer = document.getElementById('drinksContainer');
+
+                recipientEmails = []; // Reset list
 
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i];
@@ -317,13 +321,12 @@
                         const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
                         if (specialtyActive) {
                             const specialty = cols[2];
-                            // Cleanly strip any lingering quote marks from ingredients
                             let ingredients = cols[4] || "";
                             ingredients = ingredients.replace(/^["']+|["']+$|["']/g, "").trim();
                             
                             const label = document.createElement('label');
                             const desc = ingredients ? `<span class="specialty-desc">${ingredients}</span>` : '';
-                            label.innerHTML = `<input type="radio" name="specialty" value="${specialty}"> <span>${specialty}${desc}</span>`;
+                            label.innerHTML = `<input type="radio" name="specialty" value="${specialty}" data-ingredients="${ingredients}"> <span>${specialty}${desc}</span>`;
                             specialtiesContainer.appendChild(label);
                         }
                     }
@@ -349,6 +352,14 @@
                             drinksContainer.appendChild(label);
                         }
                     }
+
+                    // 5. Process Email & Send Status (Cols 9 & 10)
+                    if (cols[9] && cols[9].includes("@")) {
+                        const sendActive = cols[10] ? cols[10].toLowerCase() === 'yes' : false;
+                        if (sendActive) {
+                            recipientEmails.push(cols[9]);
+                        }
+                    }
                 }
             } catch (e) {
                 console.error("Error loading master sheet:", e);
@@ -368,14 +379,17 @@
             const name = nameInput.value.trim();
             if (!name) { alert("⚠️ Please select or enter a name!"); nameInput.focus(); return; }
 
-            const specialty = document.querySelector('input[name="specialty"]:checked')?.value || "None";
+            const specialtyRadio = document.querySelector('input[name="specialty"]:checked');
+            const specialty = specialtyRadio ? specialtyRadio.value : "None";
+            const specialtyIngredients = specialtyRadio ? specialtyRadio.getAttribute('data-ingredients') : "";
+
             const sauce = document.querySelector('input[name="sauce"]:checked')?.value || "Tomato";
             const drink = document.querySelector('input[name="drink"]:checked')?.value || "No Drink";
             const toppingElements = document.querySelectorAll('input[name="topping"]:checked');
             const toppings = Array.from(toppingElements).map(el => el.value);
             const toppingsText = toppings.length > 0 ? toppings.join(', ') : 'None';
 
-            orders.push({ name, specialty, sauce, toppings: toppingsText, drink });
+            orders.push({ name, specialty, specialtyIngredients, sauce, toppings: toppingsText, drink });
             renderOrders();
             resetForm(nameInput, toppingElements);
         });
@@ -406,15 +420,24 @@
 
         function sendEmail() {
             if (orders.length === 0) { alert("There are no orders to send yet!"); return; }
+            
+            // If emails were found in the sheet, join them with commas. Otherwise, fall back to a default.
+            let recipients = recipientEmails.length > 0 ? recipientEmails.join(",") : "eoinfegan@gmail.com";
+
             let emailBody = "Here is the group pizza order:\n\n";
             orders.forEach((o, i) => {
                 emailBody += `${i + 1}. ${o.name}'s Order\n`;
-                if (o.specialty !== "None") emailBody += `   Specialty: ${o.specialty}\n`;
+                if (o.specialty !== "None") {
+                    emailBody += `   Specialty: ${o.specialty}\n`;
+                    if (o.specialtyIngredients) {
+                        emailBody += `   Ingredients: ${o.specialtyIngredients}\n`;
+                    }
+                }
                 emailBody += `   Sauce: ${o.sauce}\n   Toppings: ${o.toppings}\n`;
                 if (o.drink !== "No Drink") emailBody += `   Drink: ${o.drink}\n`;
                 emailBody += `\n`;
             });
-            window.location.href = `mailto:eoinfegan@gmail.com?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
+            window.location.href = `mailto:${recipients}?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
         }
     </script>
 </body>
