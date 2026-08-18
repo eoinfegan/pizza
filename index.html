@@ -368,16 +368,21 @@
                         }
                     }
 
-                    // 5. Dynamic Email Matcher: Scans every column for an email, and checks if the *very next column over* says "yes"
+                    // 5. Robust Email Check: Scans the entire row for any text containing '@', and checks if Column K (index 10) says "yes"
+                    let emailFound = "";
                     for (let j = 0; j < cols.length; j++) {
-                        let cell = cols[j] ? cols[j].trim() : "";
-                        if (cell.includes("@")) {
-                            let nextCell = cols[j + 1] ? cols[j + 1].toLowerCase().trim() : "";
-                            if (nextCell === "yes") {
-                                if (!recipientEmails.includes(cell)) {
-                                    recipientEmails.push(cell);
-                                }
-                            }
+                        let val = cols[j] ? cols[j].trim() : "";
+                        if (val.includes("@")) {
+                            emailFound = val;
+                            break;
+                        }
+                    }
+
+                    let sendYesNo = cols[10] ? cols[10].toLowerCase().trim() : "";
+
+                    if (emailFound && sendYesNo === "yes") {
+                        if (!recipientEmails.includes(emailFound)) {
+                            recipientEmails.push(emailFound);
                         }
                     }
                 }
