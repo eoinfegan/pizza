@@ -368,15 +368,13 @@
                         }
                     }
 
-                    // 5. Flexible Email Finder: Scans every column in the row for an email and a trailing "yes"
-                    for (let j = 0; j < cols.length; j++) {
-                        let cell = cols[j];
-                        if (cell && cell.includes("@") && !recipientEmails.includes(cell)) {
-                            // Check if the next column over says "yes"
-                            let nextCell = cols[j + 1] ? cols[j + 1].toLowerCase() : "";
-                            if (nextCell === "yes") {
-                                recipientEmails.push(cell);
-                            }
+                    // 5. Strict Column K Check (Index 10): Checks Column J (Index 9) for email and Column K (Index 10) for "yes"
+                    const emailCell = cols[9] ? cols[9].trim() : "";
+                    const sendCell = cols[10] ? cols[10].toLowerCase().trim() : "";
+
+                    if (emailCell && emailCell.includes("@") && sendCell === "yes") {
+                        if (!recipientEmails.includes(emailCell)) {
+                            recipientEmails.push(emailCell);
                         }
                     }
                 }
