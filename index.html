@@ -56,7 +56,7 @@
         .order-list-container {
             overflow-y: auto;
             flex-grow: 1;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         h1, h2, h3 {
@@ -83,14 +83,24 @@
             margin-top: 0;
         }
 
-        .name-input {
+        .name-input, .note-input {
             width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 1em;
             box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .name-input {
             margin-top: 10px;
+        }
+
+        .note-input {
+            resize: vertical;
+            height: 70px;
+            margin-bottom: 15px;
         }
 
         .option-group {
@@ -278,6 +288,13 @@
             <div class="order-list-container" id="orderList">
                 <p style="color: #777; font-style: italic;">No pizzas submitted yet. Be the first!</p>
             </div>
+            
+            <!-- Note Box Added Here -->
+            <div style="margin-bottom: 10px;">
+                <label for="orderNote" style="font-size: 0.9em; font-weight: bold; color: #555; padding: 0 0 5px 0; margin-bottom: 0;">Add a note for the order:</label>
+                <textarea id="orderNote" class="note-input" placeholder="e.g., Please deliver by 7 PM..."></textarea>
+            </div>
+
             <button class="email-btn" onclick="sendEmail()">Send Email</button>
         </div>
     </div>
@@ -285,7 +302,6 @@
     <script>
         const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
 
-        // Global array to store recipient emails collected from the sheet
         let recipientEmails = [];
 
         async function loadMasterSheet() {
@@ -300,13 +316,12 @@
                 const toppingsContainer = document.getElementById('toppingsContainer');
                 const drinksContainer = document.getElementById('drinksContainer');
 
-                recipientEmails = []; // Reset list
+                recipientEmails = [];
 
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i];
                     if (!cols || cols.length === 0) continue;
 
-                    // 1. Process Names (Cols 0 & 1)
                     if (cols[0] && cols[0] !== "") {
                         const nameActive = cols[1] ? cols[1].toLowerCase() === 'yes' : false;
                         if (nameActive) {
@@ -316,7 +331,6 @@
                         }
                     }
 
-                    // 2. Process Specialties, Availability & Ingredients (Cols 2, 3, 4)
                     if (cols[2] && cols[2] !== "") {
                         const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
                         if (specialtyActive) {
@@ -331,7 +345,6 @@
                         }
                     }
 
-                    // 3. Process Toppings & Availability (Cols 5 & 6)
                     if (cols[5] && cols[5] !== "") {
                         const toppingActive = cols[6] ? cols[6].toLowerCase() === 'yes' : false;
                         if (toppingActive) {
@@ -342,7 +355,6 @@
                         }
                     }
 
-                    // 4. Process Drinks & Availability (Cols 7 & 8)
                     if (cols[7] && cols[7] !== "") {
                         const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
                         if (drinkActive) {
@@ -353,7 +365,6 @@
                         }
                     }
 
-                    // 5. Process Email & Send Status (Cols 9 & 10)
                     if (cols[9] && cols[9].includes("@")) {
                         const sendActive = cols[10] ? cols[10].toLowerCase() === 'yes' : false;
                         if (sendActive) {
@@ -421,8 +432,8 @@
         function sendEmail() {
             if (orders.length === 0) { alert("There are no orders to send yet!"); return; }
             
-            // If emails were found in the sheet, join them with commas. Otherwise, fall back to a default.
             let recipients = recipientEmails.length > 0 ? recipientEmails.join(",") : "eoinfegan@gmail.com";
+            let noteText = document.getElementById('orderNote').value.trim();
 
             let emailBody = "Here is the group pizza order:\n\n";
             orders.forEach((o, i) => {
@@ -437,6 +448,11 @@
                 if (o.drink !== "No Drink") emailBody += `   Drink: ${o.drink}\n`;
                 emailBody += `\n`;
             });
+
+            if (noteText) {
+                emailBody += `Note: ${noteText}\n`;
+            }
+
             window.location.href = `mailto:${recipients}?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
         }
     </script>
