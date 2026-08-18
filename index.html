@@ -368,13 +368,16 @@
                         }
                     }
 
-                    // 5. Strict Column K Check (Index 10): Checks Column J (Index 9) for email and Column K (Index 10) for "yes"
-                    const emailCell = cols[9] ? cols[9].trim() : "";
-                    const sendCell = cols[10] ? cols[10].toLowerCase().trim() : "";
-
-                    if (emailCell && emailCell.includes("@") && sendCell === "yes") {
-                        if (!recipientEmails.includes(emailCell)) {
-                            recipientEmails.push(emailCell);
+                    // 5. Dynamic Email Matcher: Scans every column for an email, and checks if the *very next column over* says "yes"
+                    for (let j = 0; j < cols.length; j++) {
+                        let cell = cols[j] ? cols[j].trim() : "";
+                        if (cell.includes("@")) {
+                            let nextCell = cols[j + 1] ? cols[j + 1].toLowerCase().trim() : "";
+                            if (nextCell === "yes") {
+                                if (!recipientEmails.includes(cell)) {
+                                    recipientEmails.push(cell);
+                                }
+                            }
                         }
                     }
                 }
