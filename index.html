@@ -289,7 +289,6 @@
                 <p style="color: #777; font-style: italic;">No pizzas submitted yet. Be the first!</p>
             </div>
             
-            <!-- Note Box Added Here -->
             <div style="margin-bottom: 10px;">
                 <label for="orderNote" style="font-size: 0.9em; font-weight: bold; color: #555; padding: 0 0 5px 0; margin-bottom: 0;">Add a note for the order:</label>
                 <textarea id="orderNote" class="note-input" placeholder="e.g., Please deliver by 7 PM..."></textarea>
@@ -322,6 +321,7 @@
                     const cols = rows[i];
                     if (!cols || cols.length === 0) continue;
 
+                    // 1. Process Names (Cols 0 & 1)
                     if (cols[0] && cols[0] !== "") {
                         const nameActive = cols[1] ? cols[1].toLowerCase() === 'yes' : false;
                         if (nameActive) {
@@ -331,6 +331,7 @@
                         }
                     }
 
+                    // 2. Process Specialties, Availability & Ingredients (Cols 2, 3, 4)
                     if (cols[2] && cols[2] !== "") {
                         const specialtyActive = cols[3] ? cols[3].toLowerCase() === 'yes' : false;
                         if (specialtyActive) {
@@ -345,6 +346,7 @@
                         }
                     }
 
+                    // 3. Process Toppings & Availability (Cols 5 & 6)
                     if (cols[5] && cols[5] !== "") {
                         const toppingActive = cols[6] ? cols[6].toLowerCase() === 'yes' : false;
                         if (toppingActive) {
@@ -355,6 +357,7 @@
                         }
                     }
 
+                    // 4. Process Drinks & Availability (Cols 7 & 8)
                     if (cols[7] && cols[7] !== "") {
                         const drinkActive = cols[8] ? cols[8].toLowerCase() === 'yes' : false;
                         if (drinkActive) {
@@ -365,10 +368,15 @@
                         }
                     }
 
-                    if (cols[9] && cols[9].includes("@")) {
-                        const sendActive = cols[10] ? cols[10].toLowerCase() === 'yes' : false;
-                        if (sendActive) {
-                            recipientEmails.push(cols[9]);
+                    // 5. Flexible Email Finder: Scans every column in the row for an email and a trailing "yes"
+                    for (let j = 0; j < cols.length; j++) {
+                        let cell = cols[j];
+                        if (cell && cell.includes("@") && !recipientEmails.includes(cell)) {
+                            // Check if the next column over says "yes"
+                            let nextCell = cols[j + 1] ? cols[j + 1].toLowerCase() : "";
+                            if (nextCell === "yes") {
+                                recipientEmails.push(cell);
+                            }
                         }
                     }
                 }
