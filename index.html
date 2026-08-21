@@ -301,8 +301,6 @@
     <script>
         const MASTER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRLVeBnsjBO5fReti8ExGcJbQg6RA9uEXVJt0gVrSRrDxTgHPYZyrfGkAvdfOmlCiBPclS4qVA-7X9/pub?gid=1039551859&single=true&output=csv";
 
-        let recipientEmails = [];
-
         async function loadMasterSheet() {
             try {
                 const response = await fetch(MASTER_CSV_URL);
@@ -334,8 +332,6 @@
                 const specialtiesContainer = document.getElementById('specialtiesContainer');
                 const toppingsContainer = document.getElementById('toppingsContainer');
                 const drinksContainer = document.getElementById('drinksContainer');
-
-                recipientEmails = [];
 
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i];
@@ -385,16 +381,6 @@
                             const label = document.createElement('label');
                             label.innerHTML = `<input type="radio" name="drink" value="${drink}"> ${drink}`;
                             drinksContainer.appendChild(label);
-                        }
-                    }
-
-                    // 5. Explicit check for Column J (index 9) for email and Column K (index 10) for "yes"
-                    let emailCell = cols[9] ? cols[9].replace(/^["']+|["']+$|["']/g, "").trim() : "";
-                    let sendCell = cols[10] ? cols[10].toLowerCase().replace(/^["']+|["']+$|["']/g, "").trim() : "";
-
-                    if (emailCell && emailCell.includes("@") && sendCell === "yes") {
-                        if (!recipientEmails.includes(emailCell)) {
-                            recipientEmails.push(emailCell);
                         }
                     }
                 }
@@ -458,11 +444,9 @@
         function sendEmail() {
             if (orders.length === 0) { alert("There are no orders to send yet!"); return; }
             
-            // Handle mobile Android vs Desktop compatibility:
-            // Put the first email in 'To', and push remaining emails into 'CC' so mobile apps don't break.
-            let primaryTo = recipientEmails.length > 0 ? recipientEmails[0] : "eoinfegan@gmail.com";
-            let ccList = recipientEmails.length > 1 ? recipientEmails.slice(1).join(",") : "";
-
+            // Explicitly set default recipients: Eoin and Helen
+            let primaryTo = "eoinfegan@gmail.com";
+            let ccList = "helennotatwork@gmail.com";
             let noteText = document.getElementById('orderNote').value.trim();
 
             let emailBody = "Here is the group pizza order:\n\n";
@@ -483,11 +467,7 @@
                 emailBody += `Note: ${noteText}\n`;
             }
 
-            let mailtoUrl = `mailto:${primaryTo}?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
-            if (ccList) {
-                mailtoUrl += `&cc=${encodeURIComponent(ccList)}`;
-            }
-
+            let mailtoUrl = `mailto:${primaryTo}?cc=${encodeURIComponent(ccList)}&subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
             window.location.href = mailtoUrl;
         }
     </script>
