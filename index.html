@@ -308,7 +308,6 @@
                 const response = await fetch(MASTER_CSV_URL);
                 const csvText = await response.text();
                 
-                // Robust line-by-line parsing handling commas inside text strings properly
                 let lines = csvText.split("\n");
                 let rows = [];
                 for (let l = 0; l < lines.length; l++) {
@@ -389,13 +388,23 @@
                         }
                     }
 
-                    // 5. Explicit check for Column J (index 9) for email and Column K (index 10) for "yes"
-                    let emailCell = cols[9] ? cols[9].replace(/^["']+|["']+$|["']/g, "").trim() : "";
-                    let sendCell = cols[10] ? cols[10].toLowerCase().replace(/^["']+|["']+$|["']/g, "").trim() : "";
+                    // 5. Intelligent Recipient Scanner: Looks through the entire row for an email address and checks if "yes" appears anywhere else in that same row
+                    let foundEmail = "";
+                    let hasYes = false;
 
-                    if (emailCell && emailCell.includes("@") && sendCell === "yes") {
-                        if (!recipientEmails.includes(emailCell)) {
-                            recipientEmails.push(emailCell);
+                    for (let j = 0; j < cols.length; j++) {
+                        let val = cols[j] ? cols[j].trim() : "";
+                        if (val.includes("@")) {
+                            foundEmail = val;
+                        }
+                        if (val.toLowerCase() === "yes") {
+                            hasYes = true;
+                        }
+                    }
+
+                    if (foundEmail && hasYes) {
+                        if (!recipientEmails.includes(foundEmail)) {
+                            recipientEmails.push(foundEmail);
                         }
                     }
                 }
@@ -459,7 +468,7 @@
         function sendEmail() {
             if (orders.length === 0) { alert("There are no orders to send yet!"); return; }
             
-            // Multiple recipients must be separated by commas without spaces to trigger properly in email clients
+            // Uses the dynamic list gathered from the sheet; only falls back if the list is completely empty
             let recipients = recipientEmails.length > 0 ? recipientEmails.join(",") : "eoinfegan@gmail.com";
             let noteText = document.getElementById('orderNote').value.trim();
 
