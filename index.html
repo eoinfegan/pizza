@@ -388,23 +388,13 @@
                         }
                     }
 
-                    // 5. Intelligent Recipient Scanner: Looks through the entire row for an email address and checks if "yes" appears anywhere else in that same row
-                    let foundEmail = "";
-                    let hasYes = false;
+                    // 5. Explicit check for Column J (index 9) for email and Column K (index 10) for "yes"
+                    let emailCell = cols[9] ? cols[9].replace(/^["']+|["']+$|["']/g, "").trim() : "";
+                    let sendCell = cols[10] ? cols[10].toLowerCase().replace(/^["']+|["']+$|["']/g, "").trim() : "";
 
-                    for (let j = 0; j < cols.length; j++) {
-                        let val = cols[j] ? cols[j].trim() : "";
-                        if (val.includes("@")) {
-                            foundEmail = val;
-                        }
-                        if (val.toLowerCase() === "yes") {
-                            hasYes = true;
-                        }
-                    }
-
-                    if (foundEmail && hasYes) {
-                        if (!recipientEmails.includes(foundEmail)) {
-                            recipientEmails.push(foundEmail);
+                    if (emailCell && emailCell.includes("@") && sendCell === "yes") {
+                        if (!recipientEmails.includes(emailCell)) {
+                            recipientEmails.push(emailCell);
                         }
                     }
                 }
@@ -468,8 +458,11 @@
         function sendEmail() {
             if (orders.length === 0) { alert("There are no orders to send yet!"); return; }
             
-            // Uses the dynamic list gathered from the sheet; only falls back if the list is completely empty
-            let recipients = recipientEmails.length > 0 ? recipientEmails.join(",") : "eoinfegan@gmail.com";
+            // Handle mobile Android vs Desktop compatibility:
+            // Put the first email in 'To', and push remaining emails into 'CC' so mobile apps don't break.
+            let primaryTo = recipientEmails.length > 0 ? recipientEmails[0] : "eoinfegan@gmail.com";
+            let ccList = recipientEmails.length > 1 ? recipientEmails.slice(1).join(",") : "";
+
             let noteText = document.getElementById('orderNote').value.trim();
 
             let emailBody = "Here is the group pizza order:\n\n";
@@ -490,7 +483,12 @@
                 emailBody += `Note: ${noteText}\n`;
             }
 
-            window.location.href = `mailto:${recipients}?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
+            let mailtoUrl = `mailto:${primaryTo}?subject=${encodeURIComponent("Pizza Order.")}&body=${encodeURIComponent(emailBody)}`;
+            if (ccList) {
+                mailtoUrl += `&cc=${encodeURIComponent(ccList)}`;
+            }
+
+            window.location.href = mailtoUrl;
         }
     </script>
 </body>
